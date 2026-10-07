@@ -1,0 +1,64 @@
+package ru.netology.testmode.test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import ru.netology.testmode.page.LoginPage;
+
+import static com.codeborne.selenide.Selenide.open;
+import static ru.netology.testmode.data.DataGenerator.Registration.getRegisteredUser;
+import static ru.netology.testmode.data.DataGenerator.Registration.getUser;
+import static ru.netology.testmode.data.DataGenerator.getRandomLogin;
+import static ru.netology.testmode.data.DataGenerator.getRandomPassword;
+
+class AuthTest {
+    LoginPage loginPage;
+
+    @BeforeEach
+    void setup() {
+        open("http://localhost:9999");
+        loginPage = new LoginPage();
+    }
+
+    @Test
+    @DisplayName("Should successfully login with active registered user")
+    void shouldSuccessfulLoginIfRegisteredActiveUser() {
+        var registeredUser = getRegisteredUser("active");
+        loginPage.login(registeredUser.getLogin(), registeredUser.getPassword());
+    }
+
+    @Test
+    @DisplayName("Should get error message if login with not registered user")
+    void shouldGetErrorIfNotRegisteredUser() {
+        var notRegisteredUser = getUser("active");
+        loginPage.login(notRegisteredUser.getLogin(), notRegisteredUser.getPassword());
+        loginPage.shouldShowError("Ошибка! Неверно указан логин или пароль");
+    }
+
+    @Test
+    @DisplayName("Should get error message if login with blocked registered user")
+    void shouldGetErrorIfBlockedUser() {
+        var blockedUser = getRegisteredUser("blocked");
+        loginPage.login(blockedUser.getLogin(), blockedUser.getPassword());
+        loginPage.shouldShowError("Ошибка! Пользователь заблокирован");
+    }
+
+    @Test
+    @DisplayName("Should get error message if login with wrong login")
+    void shouldGetErrorIfWrongLogin() {
+        var registeredUser = getRegisteredUser("active");
+        var wrongLogin = getRandomLogin();
+        loginPage.login(wrongLogin, registeredUser.getPassword());
+        loginPage.shouldShowError("Ошибка! Неверно указан логин или пароль");
+    }
+
+    @Test
+    @DisplayName("Should get error message if login with wrong password")
+    void shouldGetErrorIfWrongPassword() {
+        var registeredUser = getRegisteredUser("active");
+        var wrongPassword = getRandomPassword();
+        loginPage.login(registeredUser.getLogin(), wrongPassword);
+        loginPage.shouldShowError("Ошибка! Неверно указан логин или пароль");
+    }
+
+}
